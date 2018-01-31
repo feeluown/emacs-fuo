@@ -33,6 +33,16 @@
   (interactive)
   (shell-command-to-string "fuocli next"))
 
+(defun fuo-pause ()
+  "Pause."
+  (interactive)
+  (shell-command-to-string "fuocli pause"))
+
+(defun fuo-clear ()
+  "Clear current playlist."
+  (interactive)
+  (shell-command-to-string "fuocli clear"))
+
 (defun fuo-show-current-playlist ()
   "Show fuo current playlist."
   (interactive)
