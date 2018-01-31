@@ -44,7 +44,7 @@
   (interactive)
   (fuo--write-to-fuo-buffer
    (fuo-run-command
-    (format "search %s" (read-string "Search: ")))))
+    (format "search %s" (read-string "Fuo search: ")))))
 
 (defvar fuo-mode-map nil "Keymap for `fuo-mode'.")
 (defvar fuo-mode-hook nil)
@@ -64,10 +64,14 @@
 
 (progn
   (setq fuo-mode-map (make-sparse-keymap))
-  (define-key fuo-mode-map (kbd "RET") 'fuo--play-current-line-song))
+  (define-key fuo-mode-map (kbd "<return>") 'fuo--play-current-line-song)
+  (define-key fuo-mode-map (kbd "s") 'fuo-search)
+  (define-key fuo-mode-map (kbd "n") 'fuo-play-next)
+  (define-key fuo-mode-map (kbd "l") 'fuo-show-current-playlist)
+  )
 
 ;;;###autoload
-(define-derived-mode fuo-mode prog-mode "Fuo"
+(define-derived-mode fuo-mode special-mode "Fuo"
   "A mode for fuo."
   (use-local-map fuo-mode-map)
   (setq font-lock-defaults '(fuo-highlights))
