@@ -7,7 +7,8 @@
 
 (defun fuo-run-command (command)
   "Run fuo COMMAND."
-  (shell-command-to-string (format "fuocli %s" command)))
+  (shell-command-to-string
+   (format "echo %s | nc localhost 23333" command)))
 
 (defun fuo--write-to-fuo-buffer (output)
   "Show OUTPUT in *fuo* buffer."
@@ -17,21 +18,37 @@
   (erase-buffer)
   (insert output)
   (goto-char 0)
-  (setq buffer-read-only t)
   )
 
 (defun fuo--play-current-line-song ()
   "Play song from `thing-at-point'."
   (interactive)
-  (when (string-prefix-p "fuo" (thing-at-point 'line t))
-    (fuo-run-command
-     (format "play %s"
-             (elt (split-string (thing-at-point 'line t)) 0)))))
+  (when (string-prefix-p "fuo" (string-trim (thing-at-point 'line t)))
+    (let ((uri (elt (split-string (thing-at-point 'line t)) 0)))
+      (message (format "Will play: %s" uri))
+      (fuo-run-command
+       (format "play %s" uri)))))
+
+
+(defun fuo--show-current-word ()
+  "Show detail of furi."
+  (interactive)
+  (when (string-prefix-p "fuo" (thing-at-point 'word t))
+    (message (format "Show: %s" (thing-at-point 'word t)))
+    (fuo--write-to-fuo-buffer
+     (fuo-run-command (format "show %s" (thing-at-point 'word))))))
 
 (defun fuo-play-next ()
   "Play next."
   (interactive)
   (shell-command-to-string "fuocli next"))
+
+(defun fuo-list ()
+  "List current playlist."
+  (interactive)
+  (fuo--write-to-fuo-buffer
+   (fuo-run-command "list"))
+)
 
 (defun fuo-pause ()
   "Pause."
@@ -42,12 +59,6 @@
   "Clear current playlist."
   (interactive)
   (shell-command-to-string "fuocli clear"))
-
-(defun fuo-show-current-playlist ()
-  "Show fuo current playlist."
-  (interactive)
-  (let ((result (shell-command-to-string "fuocli list")))
-    (fuo--write-to-fuo-buffer result)))
 
 (defun fuo-search ()
   "Search songs."
@@ -70,14 +81,17 @@
         ;; python style comment: “# …”
         (modify-syntax-entry ?# "<" syntax-table)
         (modify-syntax-entry ?\n ">" syntax-table)
+        (modify-syntax-entry ?: "w" syntax-table)
+        (modify-syntax-entry ?/ "w" syntax-table)
         syntax-table))
 
 (progn
   (setq fuo-mode-map (make-sparse-keymap))
   (define-key fuo-mode-map (kbd "<return>") 'fuo--play-current-line-song)
+  (define-key fuo-mode-map (kbd "SPC") 'fuo--show-current-word)
   (define-key fuo-mode-map (kbd "s") 'fuo-search)
   (define-key fuo-mode-map (kbd "n") 'fuo-play-next)
-  (define-key fuo-mode-map (kbd "l") 'fuo-show-current-playlist)
+  (define-key fuo-mode-map (kbd "l") 'fuo-list)
   )
 
 ;;;###autoload
