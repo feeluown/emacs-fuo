@@ -204,5 +204,8 @@ Parse a fuo uri from current word and show info about it."
   (setq font-lock-defaults '(fuo-highlights))
   (set-syntax-table fuo-mode-syntax-table))
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.fuo\\'" . fuo-mode))
+
 (provide 'fuo)
 ;;; fuo.el ends here
