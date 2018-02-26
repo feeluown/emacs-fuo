@@ -77,7 +77,8 @@ Create a connection if needed."
 
 (defun fuo-run-command (command)
   "Run fuo COMMAND."
-  (process-send-string (fuo-get-or-create-connection) command))
+  (process-send-string (fuo-get-or-create-connection) (concat command "\n"))
+  (process-send-eof))
 
 (defun fuo--is-current-word-uri ()
   "Judge if the current word is a valid uri."
