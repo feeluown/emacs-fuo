@@ -24,10 +24,11 @@
 
 (require 'subr-x)
 
-(defun fuo-run-command (command)
-  "Run fuo COMMAND."
-  (shell-command-to-string
-   (format "echo %s | nc localhost 23333" command)))
+(defvar fuo-daemon-proc-name nil "Fuo daemon connection name.")
+(defvar fuo-live-lyric-proc-name nil "Fuo live lyric connection name.")
+
+(setq fuo-daemon-proc-name "fuo-conn")
+(setq fuo-live-lyric-proc-name "fuo-live-lyric")
 
 (defun fuo--write-to-fuo-buffer (output)
   "Show OUTPUT in *fuo* buffer."
@@ -38,6 +39,45 @@
   (insert output)
   (goto-char 0)
   )
+
+(defun fuo-daemon-proc-filter (_proc string)
+  "Fuo daemon connection filter function.
+Write PROC STRING to fuo buffer."
+  (fuo--write-to-fuo-buffer string)
+  ;; (message string)
+  )
+
+(defun fuo-create-connection ()
+  "Create a persistent connection to fuo daemon."
+  (interactive)
+  (if (not (process-status fuo-daemon-proc-name))
+      (progn
+        (message "Try to create a connection to fuo daemon...")
+        (condition-case nil
+            (progn
+              (open-network-stream fuo-daemon-proc-name nil "localhost" 23333)
+              (message (concat (current-message) "done"))
+              (set-process-filter (get-process fuo-daemon-proc-name) 'fuo-daemon-proc-filter)
+              )
+          (error (message (concat (current-message) "failed")))))
+    (message "Connection already exists.")))
+
+(defun fuo-close-connection ()
+  "Close the connection to fuo daemon."
+  (interactive)
+  (delete-process fuo-daemon-proc-name))
+
+(defun fuo-get-or-create-connection ()
+  "A convenience function for getting connection.
+Create a connection if needed."
+  (interactive)
+  (when (not (process-status fuo-daemon-proc-name))
+      (fuo-create-connection))
+  (get-process fuo-daemon-proc-name))
+
+(defun fuo-run-command (command)
+  "Run fuo COMMAND."
+  (process-send-string (fuo-get-or-create-connection) command))
 
 (defun fuo--is-current-word-uri ()
   "Judge if the current word is a valid uri."
@@ -61,7 +101,7 @@ print msg in the echo area."
       (progn
         (message
          (format "Add %s to current playlist." (thing-at-point 'word)))
-        (message (fuo-run-command (format "add %s" (thing-at-point 'word))))
+        (fuo-run-command (format "add %s" (thing-at-point 'word)))
         (fuo-list)  ;; TODO: more elegant way to refresh?
         )
     (message "No song found under cursor.")))
@@ -74,8 +114,7 @@ print msg in the echo area."
       (progn
         (message
          (format "Remove %s from current playlist." (thing-at-point 'word)))
-        (message
-         (fuo-run-command (format "remove %s" (thing-at-point 'word))))
+        (fuo-run-command (format "remove %s" (thing-at-point 'word)))
         (fuo-list)
         )
     (message "No song found under cursor.")))
@@ -92,32 +131,24 @@ Parse a fuo uri from current word and show info about it."
 (defun fuo-status ()
   "Show status of fuo daemon."
   (interactive)
-  (let ((msg (fuo-run-command "status")))
-    (if (string= msg "")
-        (fuo--write-to-fuo-buffer "Fuo daemon not started.")
-      (fuo--write-to-fuo-buffer msg))))
+  (fuo-run-command "status"))
 
 (defun fuo-next ()
   "Play next."
   (interactive)
   (message "Will play next song.")
-  (shell-command-to-string "fuocli next"))
+  (fuo-run-command "next"))
 
 (defun fuo-previous ()
   "Play previous."
   (interactive)
   (message "Will play previous song.")
-  (shell-command-to-string "fuocli next"))
+  (fuo-run-command "previous"))
 
 (defun fuo-list ()
   "List current playlist."
   (interactive)
-  (switch-to-buffer "*fuo-current-playlist*")
-  (fuo-mode)
-  (setq buffer-read-only nil)
-  (erase-buffer)
-  (insert (fuo-run-command "list"))
-  (goto-char 0)
+  (fuo-run-command "list")
 )
 
 (defun fuo-pause ()
@@ -147,18 +178,24 @@ Parse a fuo uri from current word and show info about it."
 (defun fuo-search ()
   "Search songs."
   (interactive)
-  (fuo--write-to-fuo-buffer
-   (fuo-run-command
-    (format "search %s" (read-string "Fuo search: ")))))
+  (fuo-run-command
+   (format "search %s" (read-string "Fuo search: "))))
 
 (defun fuo-live-lyric ()
   "Live lyric."
   (interactive)
-  (start-process-shell-command
-   "live lyric"
-   "*fuo-live-lyric*"
-   "echo \"sub topic.live_lyric\" | nc localhost 23334")
-  (message "Show live lyric in *fuo-live-lyric* buffer."))
+  (if (not (process-status fuo-live-lyric-proc-name))
+      (progn
+        (message "Try to create a connection to fuo live lyric...")
+        (condition-case nil
+            (progn
+              (open-network-stream fuo-live-lyric-proc-name "*fuo-live-lyric*" "localhost" 23334)
+              (message (concat (current-message) "done"))
+              (process-send-string (get-process fuo-live-lyric-proc-name) "sub topic.live_lyric\n")
+              (switch-to-buffer "*fuo-live-lyric*")
+              )
+          (error (message (concat (current-message) "failed")))))
+    (message "Connection already exists.")))
 
 
 (defvar fuo-mode-map nil "Keymap for `fuo-mode'.")
