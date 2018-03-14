@@ -5,7 +5,7 @@
 ;; Author: cosven <yinshaowen241@gmail.com>
 ;; URL: http://github.com/cosven/emacs-fuo
 ;; Package-Requires: ((emacs "24.4"))
-;; Version: 1.0alpha1
+;; Version: 1.0beta
 ;; Keywords: feeluown, multimedia, unix
 
 ;; This file is not part of GNU Emacs.
