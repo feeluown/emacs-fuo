@@ -75,6 +75,7 @@ Create a connection if needed."
       (fuo-create-connection))
   (get-process fuo-daemon-proc-name))
 
+;;;###autoload
 (defun fuo-run-command (command)
   "Run fuo COMMAND."
   (process-send-string (fuo-get-or-create-connection) (concat command "\n"))
@@ -146,6 +147,7 @@ Parse a fuo uri from current word and show info about it."
   (message "Will play previous song.")
   (fuo-run-command "previous"))
 
+;;;###autoload
 (defun fuo-list ()
   "List current playlist."
   (interactive)
@@ -176,12 +178,14 @@ Parse a fuo uri from current word and show info about it."
   (message "Clear current playlist.")
   (fuo-run-command "clear"))
 
+;;;###autoload
 (defun fuo-search ()
   "Search songs."
   (interactive)
   (fuo-run-command
    (format "search %s" (read-string "Fuo search: "))))
 
+;;;###autoload
 (defun fuo-live-lyric ()
   "Live lyric."
   (interactive)
