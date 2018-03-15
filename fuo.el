@@ -34,16 +34,30 @@
   "Show OUTPUT in *fuo* buffer."
   (switch-to-buffer "*fuo*")
   (fuo-mode)
+  (fuoc-mode 1)
   (setq buffer-read-only nil)
   (erase-buffer)
   (insert output)
+  (setq buffer-read-only t)
+  (goto-char 0)
+  )
+
+(defun fuo--append-to-fuo-buffer (output)
+  "Append OUTPUT to *fuo* buffer."
+  (switch-to-buffer "*fuo*")
+  (setq buffer-read-only nil)
+  (goto-char (point-max))
+  (insert output)
+  (setq buffer-read-only t)
   (goto-char 0)
   )
 
 (defun fuo-daemon-proc-filter (_proc string)
   "Fuo daemon connection filter function.
 Write PROC STRING to fuo buffer."
-  (fuo--write-to-fuo-buffer string)
+  (if (or (string-prefix-p "ACK" string) (string-prefix-p "Oops" string))
+      (fuo--write-to-fuo-buffer string)
+    (fuo--append-to-fuo-buffer string))
   ;; (message string)
   )
 
@@ -203,7 +217,7 @@ Parse a fuo uri from current word and show info about it."
     (message "Connection already exists.")))
 
 
-(defvar fuo-mode-map nil "Keymap for `fuo-mode'.")
+
 (defvar fuo-mode-hook nil)
 (defvar fuo-mode-syntax-table nil "Syntax table for `fuo-mode'.")
 (defvar fuo-highlights nil)
@@ -221,33 +235,47 @@ Parse a fuo uri from current word and show info about it."
         (modify-syntax-entry ?/ "w" syntax-table)
         syntax-table))
 
-(progn
-  (setq fuo-mode-map (make-sparse-keymap))
-  ;; FIXME: let user do the customization themsevles?
-  ;; or some other more reasonable shortcuts?
-  (define-key fuo-mode-map (kbd "<return>") 'fuo-play-uri)
-  (define-key fuo-mode-map (kbd "SPC") 'fuo-show-uri)
-  (define-key fuo-mode-map (kbd "A") 'fuo-add-uri)
-  (define-key fuo-mode-map (kbd "D") 'fuo-remove-uri)
-  (define-key fuo-mode-map (kbd "S") 'fuo-search)
-  ;; NOTE: put these in README is enough?
-  ;; (define-key fuo-mode-map (kbd "n") 'fuo-next)
-  ;; (define-key fuo-mode-map (kbd "N") 'fuo-previous)
-  ;; (define-key fuo-mode-map (kbd "t") 'fuo-toggle)
-  ;; (define-key fuo-mode-map (kbd "r") 'fuo-resume)
-  ;; (define-key fuo-mode-map (kbd "p") 'fuo-pause)
-  ;; (define-key fuo-mode-map (kbd "l") 'fuo-list)
-)
-
 ;;;###autoload
 (define-derived-mode fuo-mode special-mode "Fuo"
   "A mode for fuo."
-  (use-local-map fuo-mode-map)
+  ;; (use-local-map fuo-mode-map)
   (setq font-lock-defaults '(fuo-highlights))
   (set-syntax-table fuo-mode-syntax-table))
 
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.fuo\\'" . fuo-mode))
+
+;; -----------------------------------
+;; -----------------------------------
+;; -----------------------------------
+
+(defvar fuoc-mode-map nil "Keymap for `fuoc-mode'.")
+
+(progn
+  (setq fuoc-mode-map (make-sparse-keymap))
+  ;; FIXME: let user do the customization themsevles?
+  ;; or some other more reasonable shortcuts?
+  (define-key fuoc-mode-map (kbd "<return>") 'fuo-play-uri)
+  (define-key fuoc-mode-map (kbd "RET") 'fuo-play-uri)
+  (define-key fuoc-mode-map (kbd "SPC") 'fuo-show-uri)
+  (define-key fuoc-mode-map (kbd "a") 'fuo-add-uri)
+  (define-key fuoc-mode-map (kbd "d") 'fuo-remove-uri)
+  (define-key fuoc-mode-map (kbd "s") 'fuo-search)
+  ;; NOTE: put these in README is enough?
+  ;; (define-key fuo-mode-map (kbd "n") 'fuo-next)
+  ;; (define-key fuo-mode-map (kbd "N") 'fuo-previous)
+  (define-key fuoc-mode-map (kbd "t") 'fuo-toggle)
+  ;; (define-key fuo-mode-map (kbd "r") 'fuo-resume)
+  ;; (define-key fuo-mode-map (kbd "p") 'fuo-pause)
+  (define-key fuoc-mode-map (kbd "l") 'fuo-list)
+)
+
+;;;###autoload
+(define-minor-mode fuoc-mode
+  "Fuo control minor mode."
+  :lighter " Fuoc"
+  :keymap fuoc-mode-map)
 
 (provide 'fuo)
 ;;; fuo.el ends here
