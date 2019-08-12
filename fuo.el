@@ -14,8 +14,7 @@
 
 ;; Licensed under the same terms as Emacs.
 
-;;; Commentary:
-
+;;; Commentary: 
 ;; Quick Start:
 ;; start feeluown daemon
 ;; run fuo-* command
@@ -225,18 +224,23 @@ Parse a fuo uri from current word and show info about it."
   (setq fuo-mode-map (make-sparse-keymap))
   ;; FIXME: let user do the customization themsevles?
   ;; or some other more reasonable shortcuts?
+
+  ;; Movement shortcuts
+  (define-key fuo-mode-map (kbd "n") 'next-line)
+  (define-key fuo-mode-map (kbd "p") 'previous-line)
+
+  ;; Player control shortcuts
   (define-key fuo-mode-map (kbd "<return>") 'fuo-play-uri)
   (define-key fuo-mode-map (kbd "SPC") 'fuo-show-uri)
   (define-key fuo-mode-map (kbd "A") 'fuo-add-uri)
   (define-key fuo-mode-map (kbd "D") 'fuo-remove-uri)
   (define-key fuo-mode-map (kbd "S") 'fuo-search)
+
   ;; NOTE: put these in README is enough?
-  ;; (define-key fuo-mode-map (kbd "n") 'fuo-next)
   ;; (define-key fuo-mode-map (kbd "N") 'fuo-previous)
-  ;; (define-key fuo-mode-map (kbd "t") 'fuo-toggle)
-  ;; (define-key fuo-mode-map (kbd "r") 'fuo-resume)
-  ;; (define-key fuo-mode-map (kbd "p") 'fuo-pause)
-  ;; (define-key fuo-mode-map (kbd "l") 'fuo-list)
+  ;; (define-key fuo-mode-map (kbd "T") 'fuo-toggle)
+  ;; (define-key fuo-mode-map (kbd "R") 'fuo-resume)
+  ;; (define-key fuo-mode-map (kbd "L") 'fuo-list)
 )
 
 ;;;###autoload
